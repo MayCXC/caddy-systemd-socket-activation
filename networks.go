@@ -1,15 +1,15 @@
-package mymodule
+package networks
 
 import (
-	"os"
-	"path/filepath"
-	"strconv"
-	"net"
-	"fmt"
 	"context"
+	"fmt"
 	"github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
 	"github.com/coreos/go-systemd/v22/activation"
+	"net"
+	"os"
+	"path/filepath"
+	"strconv"
 )
 
 var nameToFiles map[string][]*os.File
@@ -22,7 +22,7 @@ func init() {
 }
 
 // FilesWithNames maps fd names to a set of os.File pointers.
-func filesWithNames() (map[string][]*os.File) {
+func filesWithNames() map[string][]*os.File {
 	files := activation.Files(true)
 	filesWithNames := map[string][]*os.File{}
 
