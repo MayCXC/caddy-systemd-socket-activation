@@ -16,8 +16,8 @@ var nameToFiles map[string][]*os.File
 
 func init() {
 	nameToFiles = filesWithNames()
-	caddy.RegisterNetwork("sd", listen)
-	caddy.RegisterNetwork("sdgram", listen)
+	caddy.RegisterNetwork("sd", getListener)
+	caddy.RegisterNetwork("sdgram", getListener)
 	caddyhttp.RegisterNetworkHTTP3("sdgram", "sdgram")
 }
 
@@ -40,7 +40,7 @@ func filesWithNames() map[string][]*os.File {
 	return filesWithNames
 }
 
-func listen(ctx context.Context, network, addr string, cfg net.ListenConfig) (any, error) {
+func getListener(ctx context.Context, network, addr string, cfg net.ListenConfig) (any, error) {
 	host, _, err := net.SplitHostPort(addr)
 	if err != nil {
 		return nil, err
