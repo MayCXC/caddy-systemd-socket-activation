@@ -1,6 +1,6 @@
 module github.com/MayCXC/caddy-systemd-socket-activation
 
-go 1.23.1
+go 1.22.3
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
