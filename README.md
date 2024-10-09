@@ -41,30 +41,7 @@ podman build -f - -t caddy-sdsa . <<-'EOT'
 	EOT
 ```
 
-then systemd socket and service units can be used to activate a container from it:
-
-`caddy.socket`:
-
-```
-[Socket]
-ListenStream=80
-ListenStream=443
-
-[Install]
-WantedBy = sockets.target
-```
-
-`caddyh3.socket`:
-
-```
-[Socket]
-ListenDatagram=443
-Service=caddy.service
-FileDescriptorName=CaddyDatagram
-
-[Install]
-WantedBy = sockets.target
-```
+then systemd socket and service units can be used to activate a container created from it:
 
 `caddy.service`:
 
@@ -92,4 +69,31 @@ AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
 WantedBy=multi-user.target
 ```
 
-podman >=4.0.0 can take advantage of quadlets to make configuration less hectic, see https://github.com/eriksjolund/podman-caddy-socket-activation .
+`caddy.socket`:
+
+```
+[Socket]
+ListenStream=80
+ListenStream=443
+
+[Install]
+WantedBy = sockets.target
+```
+
+`caddyh3.socket`:
+
+```
+[Socket]
+ListenDatagram=443
+Service=caddy.service
+FileDescriptorName=CaddyDatagram
+
+[Install]
+WantedBy = sockets.target
+```
+
+the modified `caddy` binary can also tested from the systemd host via a bind mount with:
+
+`systemd-socket-activate -l 80 -l 443 systemd-socket-activate -l 443 -d -E LISTEN_FDNAMES="caddy.socket:caddy.socket:CaddyDatagram" ./caddy run`
+
+and podman >=4.0.0 can take advantage of quadlets to make configuration less hectic, see https://github.com/eriksjolund/podman-caddy-socket-activation .
