@@ -92,7 +92,7 @@ FileDescriptorName=CaddyDatagram
 WantedBy = sockets.target
 ```
 
-the modified `caddy` binary can also tested from the systemd host via a bind mount with:
+or the modified `caddy` binary can tested from the systemd host via a bind mount with:
 
 `systemd-socket-activate -l 80 -l 443 systemd-socket-activate -l 443 -d -E LISTEN_FDNAMES="caddy.socket:caddy.socket:CaddyDatagram" ./caddy run`
 
