@@ -81,7 +81,7 @@ User=caddy
 Group=caddy
 Environment=PODMAN_SYSTEMD_UNIT=%n
 Restart=on-failure
-ExecStart=podman run --rm --env-host localhost/caddy-sdsa
+ExecStart=podman run --rm localhost/caddy-sdsa
 TimeoutStopSec=5s
 LimitNOFILE=1048576
 PrivateTmp=true
