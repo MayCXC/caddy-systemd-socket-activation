@@ -8,8 +8,8 @@ import (
 	"github.com/coreos/go-systemd/v22/activation"
 	"net"
 	"os"
-	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 var nameToFiles map[string][]*os.File
@@ -46,14 +46,14 @@ func getListener(ctx context.Context, network, addr string, cfg net.ListenConfig
 		return nil, err
 	}
 
-	paths := filepath.SplitList(host)
-	if len(paths) != 2 {
-		return nil, fmt.Errorf("invalid listen address: %s/%s", network, addr)
+	li := strings.LastIndex(host, "/")
+	if li < 0 {
+		li = len(host)
 	}
+	name := host[li:]
+	index := host[:li]
 
-	name := paths[0]
-
-	index, err := strconv.ParseUint(paths[1], 0, strconv.IntSize)
+	i, err := strconv.ParseUint(index, 0, strconv.IntSize)
 	if err != nil {
 		return nil, err
 	}
@@ -63,10 +63,10 @@ func getListener(ctx context.Context, network, addr string, cfg net.ListenConfig
 		return nil, fmt.Errorf("invalid listen fd name: %s", name)
 	}
 
-	if uint64(len(files)) <= index {
-		return nil, fmt.Errorf("invalid listen fd index: %d", index)
+	if uint64(len(files)) <= i {
+		return nil, fmt.Errorf("invalid listen fd index: %d", i)
 	}
-	file := files[index]
+	file := files[i]
 
 	switch network {
 	case "sd":
