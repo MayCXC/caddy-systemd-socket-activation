@@ -29,7 +29,7 @@ https://localhost {
 }
 ```
 
-can be used with `xcaddy` to build and tag a container image in its working directory that uses this plugin, like so:
+can be used with `xcaddy` to build and tag a container image that uses this plugin from its working directory, like so:
 
 ```sh
 podman build -f - -t caddy-sdsa . <<-'EOT'
