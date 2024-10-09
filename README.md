@@ -41,7 +41,7 @@ podman build -f - -t caddy-sdsa . <<-'EOT'
 	EOT
 ```
 
-then systemd socket and service units can be used to activate a container created from it:
+then these systemd service and socket units can be used to activate a container created from it:
 
 `caddy.service`:
 
