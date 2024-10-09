@@ -1,6 +1,7 @@
 module github.com/MayCXC/caddy-systemd-socket-activation
 
 go 1.22.3
+toolchain go1.23.1
 
 require (
 	github.com/caddyserver/caddy/v2 v2.8.4
