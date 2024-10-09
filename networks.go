@@ -50,8 +50,8 @@ func getListener(ctx context.Context, network, addr string, cfg net.ListenConfig
 	if li < 0 {
 		li = len(host)
 	}
-	name := host[li:]
-	index := host[:li]
+	name := host[:li]
+	index := host[li:]
 
 	i, err := strconv.ParseUint(index, 0, strconv.IntSize)
 	if err != nil {
