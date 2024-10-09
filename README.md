@@ -1,6 +1,8 @@
 # caddy-systemd-socket-activation
 a plugin that adds `sd` and `sdgram` custom networks for caddy.
 
+an example Caddyfile:
+
 ```
 {
 	auto_https disable_redirects
@@ -27,7 +29,7 @@ https://localhost {
 }
 ```
 
-from a working directory containing this Caddyfile,`xcaddy` can be used to a container image can be build and tag a container image like so:
+can be used with `xcaddy` to build and tag a container image in its working directory that uses this plugin, like so:
 
 ```sh
 podman build -f - -t caddy-sdsa . <<-'EOT'
@@ -38,3 +40,56 @@ podman build -f - -t caddy-sdsa . <<-'EOT'
 	COPY Caddyfile /etc/caddy/Caddyfile
 	EOT
 ```
+
+then systemd socket and service units can be used to activate a container from it:
+
+`caddy.socket`:
+
+```
+[Socket]
+ListenStream=80
+ListenStream=443
+
+[Install]
+WantedBy = sockets.target
+```
+
+`caddyh3.socket`:
+
+```
+[Socket]
+ListenDatagram=443
+Service=caddy.service
+FileDescriptorName=CaddyDatagram
+
+[Install]
+WantedBy = sockets.target
+```
+
+`caddy.service`:
+
+```
+[Unit]
+Description=Caddy
+Documentation=https://caddyserver.com/docs/
+After=network.target network-online.target
+Requires=network-online.target
+
+[Service]
+Type=notify
+User=caddy
+Group=caddy
+Environment=PODMAN_SYSTEMD_UNIT=%n
+Restart=on-failure
+ExecStart=podman run --rm --env-host localhost/caddy-sdsa
+TimeoutStopSec=5s
+LimitNOFILE=1048576
+PrivateTmp=true
+ProtectSystem=full
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target
+```
+
+podman >=4.0.0 can take advantage of quadlets to make configuration less hectic, see https://github.com/eriksjolund/podman-caddy-socket-activation .
