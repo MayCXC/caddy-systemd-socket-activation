@@ -96,4 +96,4 @@ or the modified `caddy` binary can tested from the systemd host via a bind mount
 
 `systemd-socket-activate -l 80 -l 443 systemd-socket-activate -l 443 -d -E LISTEN_FDNAMES="caddy.socket:caddy.socket:CaddyDatagram" ./caddy run`
 
-podman >=4.0.0 can take advantage of quadlets to make configuration less hectic, see https://github.com/eriksjolund/podman-caddy-socket-activation
+podman >=4.0.0 can take advantage of quadlets to make this configuration less hectic, see https://github.com/eriksjolund/podman-caddy-socket-activation
