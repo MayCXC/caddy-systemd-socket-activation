@@ -26,13 +26,13 @@ var (
 )
 
 func getListener(ctx context.Context, network, addr string, cfg net.ListenConfig) (any, error) {
-	const lnFdsStart = 3
-
 	func() {
 		nameToFilesMu.Lock()
 		defer nameToFilesMu.Unlock()
 
 		if nameToFiles == nil && nameToFilesErr == nil {
+			const lnFdsStart = 3
+
 			lnPid, ok := os.LookupEnv("LISTEN_PID")
 			if !ok {
 				nameToFilesErr = errors.New("LISTEN_PID is unset.")
