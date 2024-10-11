@@ -89,7 +89,7 @@ func sdListenFds() (map[string][]int, error) {
 }
 
 func getListener(ctx context.Context, network, addr string, cfg net.ListenConfig) (any, error) {
-	lnFds, err := sdListenFds()
+	sdLnFds, err := sdListenFds()
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func getListener(ctx context.Context, network, addr string, cfg net.ListenConfig
 		return nil, err
 	}
 
-	files, ok := lnFds[name]
+	files, ok := sdLnFds[name]
 	if !ok {
 		return nil, fmt.Errorf("invalid listen fd name: %s", name)
 	}
