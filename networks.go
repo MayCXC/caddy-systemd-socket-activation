@@ -25,64 +25,70 @@ var (
 	nameToFilesMu  sync.Mutex
 )
 
-func getListener(ctx context.Context, network, addr string, cfg net.ListenConfig) (any, error) {
-	func() {
-		nameToFilesMu.Lock()
-		defer nameToFilesMu.Unlock()
-
-		if nameToFiles == nil && nameToFilesErr == nil {
-			const lnFdsStart = 3
-
-			lnPid, ok := os.LookupEnv("LISTEN_PID")
-			if !ok {
-				nameToFilesErr = errors.New("LISTEN_PID is unset.")
-				return
-			}
-
-			pid, err := strconv.ParseUint(lnPid, 0, strconv.IntSize)
-			if err != nil {
-				nameToFilesErr = err
-				return
-			}
-
-			if pid != uint64(os.Getpid()) {
-				nameToFilesErr = fmt.Errorf("LISTEN_PID does not match pid: %d != %d", pid, os.Getpid())
-				return
-			}
-
-			lnFds, ok := os.LookupEnv("LISTEN_FDS")
-			if !ok {
-				nameToFilesErr = errors.New("LISTEN_FDS is unset.")
-				return
-			}
-
-			fds, err := strconv.ParseUint(lnFds, 0, strconv.IntSize)
-			if err != nil {
-				nameToFilesErr = err
-				return
-			}
-
-			lnFdnames, ok := os.LookupEnv("LISTEN_FDNAMES")
-			if !ok {
-				nameToFilesErr = errors.New("LISTEN_FDNAMES is unset.")
-				return
-			}
-
-			fdNames := strings.Split(lnFdnames, ":")
-			if fds != uint64(len(fdNames)) {
-				nameToFilesErr = fmt.Errorf("LISTEN_FDS does not match LISTEN_FDNAMES length: %d != %d", fds, len(fdNames))
-				return
-			}
-
-			nameToFiles = make(map[string][]int, len(fdNames))
-			for index, name := range fdNames {
-				nameToFiles[name] = append(nameToFiles[name], lnFdsStart+index)
-			}
-		}
-	}()
+func sdListenFds() error {
+	nameToFilesMu.Lock()
+	defer nameToFilesMu.Unlock()
 
 	if nameToFilesErr != nil {
-		return nil, nameToFilesErr
+		return nameToFilesErr
+	} else if nameToFiles != nil {
+		return nil
+	}
+
+	const lnFdsStart = 3
+
+	lnPid, ok := os.LookupEnv("LISTEN_PID")
+	if !ok {
+		nameToFilesErr = errors.New("LISTEN_PID is unset.")
+		return nameToFilesErr
+	}
+
+	pid, err := strconv.ParseUint(lnPid, 0, strconv.IntSize)
+	if err != nil {
+		nameToFilesErr = err
+		return nameToFilesErr
+	}
+
+	if pid != uint64(os.Getpid()) {
+		nameToFilesErr = fmt.Errorf("LISTEN_PID does not match pid: %d != %d", pid, os.Getpid())
+		return nameToFilesErr
+	}
+
+	lnFds, ok := os.LookupEnv("LISTEN_FDS")
+	if !ok {
+		nameToFilesErr = errors.New("LISTEN_FDS is unset.")
+		return nameToFilesErr
+	}
+
+	fds, err := strconv.ParseUint(lnFds, 0, strconv.IntSize)
+	if err != nil {
+		nameToFilesErr = err
+		return nameToFilesErr
+	}
+
+	lnFdnames, ok := os.LookupEnv("LISTEN_FDNAMES")
+	if !ok {
+		nameToFilesErr = errors.New("LISTEN_FDNAMES is unset.")
+		return nameToFilesErr
+	}
+
+	fdNames := strings.Split(lnFdnames, ":")
+	if fds != uint64(len(fdNames)) {
+		nameToFilesErr = fmt.Errorf("LISTEN_FDS does not match LISTEN_FDNAMES length: %d != %d", fds, len(fdNames))
+		return nameToFilesErr
+	}
+
+	nameToFiles = make(map[string][]int, len(fdNames))
+	for index, name := range fdNames {
+		nameToFiles[name] = append(nameToFiles[name], lnFdsStart+index)
+	}
+	return nil
+}
+
+func getListener(ctx context.Context, network, addr string, cfg net.ListenConfig) (any, error) {
+	err := sdListenFds()
+	if err != nil {
+		return nil, err
 	}
 
 	host, port, err := net.SplitHostPort(addr)
