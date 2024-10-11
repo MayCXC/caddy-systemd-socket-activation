@@ -25,14 +25,16 @@ var (
 	nameToFilesMu  sync.Mutex
 )
 
-func sdListenFds() error {
+func sdListenFds() (map[string][]int, error) {
 	nameToFilesMu.Lock()
 	defer nameToFilesMu.Unlock()
 
 	if nameToFilesErr != nil {
-		return nameToFilesErr
-	} else if nameToFiles != nil {
-		return nil
+		return nil, nameToFilesErr
+	}
+
+	if nameToFiles != nil {
+		return nameToFiles, nil
 	}
 
 	const lnFdsStart = 3
@@ -40,53 +42,54 @@ func sdListenFds() error {
 	lnPid, ok := os.LookupEnv("LISTEN_PID")
 	if !ok {
 		nameToFilesErr = errors.New("LISTEN_PID is unset.")
-		return nameToFilesErr
+		return nil, nameToFilesErr
 	}
 
 	pid, err := strconv.ParseUint(lnPid, 0, strconv.IntSize)
 	if err != nil {
 		nameToFilesErr = err
-		return nameToFilesErr
+		return nil, nameToFilesErr
 	}
 
 	if pid != uint64(os.Getpid()) {
 		nameToFilesErr = fmt.Errorf("LISTEN_PID does not match pid: %d != %d", pid, os.Getpid())
-		return nameToFilesErr
+		return nil, nameToFilesErr
 	}
 
 	lnFds, ok := os.LookupEnv("LISTEN_FDS")
 	if !ok {
 		nameToFilesErr = errors.New("LISTEN_FDS is unset.")
-		return nameToFilesErr
+		return nil, nameToFilesErr
 	}
 
 	fds, err := strconv.ParseUint(lnFds, 0, strconv.IntSize)
 	if err != nil {
 		nameToFilesErr = err
-		return nameToFilesErr
+		return nil, nameToFilesErr
 	}
 
 	lnFdnames, ok := os.LookupEnv("LISTEN_FDNAMES")
 	if !ok {
 		nameToFilesErr = errors.New("LISTEN_FDNAMES is unset.")
-		return nameToFilesErr
+		return nil, nameToFilesErr
 	}
 
 	fdNames := strings.Split(lnFdnames, ":")
 	if fds != uint64(len(fdNames)) {
 		nameToFilesErr = fmt.Errorf("LISTEN_FDS does not match LISTEN_FDNAMES length: %d != %d", fds, len(fdNames))
-		return nameToFilesErr
+		return nil, nameToFilesErr
 	}
 
 	nameToFiles = make(map[string][]int, len(fdNames))
 	for index, name := range fdNames {
 		nameToFiles[name] = append(nameToFiles[name], lnFdsStart+index)
 	}
-	return nil
+
+	return nameToFiles, nil
 }
 
 func getListener(ctx context.Context, network, addr string, cfg net.ListenConfig) (any, error) {
-	err := sdListenFds()
+	lnFds, err := sdListenFds()
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +110,7 @@ func getListener(ctx context.Context, network, addr string, cfg net.ListenConfig
 		return nil, err
 	}
 
-	files, ok := nameToFiles[name]
+	files, ok := lnFds[name]
 	if !ok {
 		return nil, fmt.Errorf("invalid listen fd name: %s", name)
 	}
