@@ -111,17 +111,17 @@ func getListener(ctx context.Context, network, addr string, cfg net.ListenConfig
 	}
 	file := files[i]
 
-	var na caddy.NetworkAddress
-	err = nil
-
+	var fdNetwork string
 	switch network {
 	case "sd":
-		na, err = caddy.ParseNetworkAddress(caddy.JoinNetworkAddress("fd", strconv.Itoa(file), port))
+		fdNetwork = "fd"
 	case "sdgram":
-		na, err = caddy.ParseNetworkAddress(caddy.JoinNetworkAddress("fdgram", strconv.Itoa(file), port))
+		fdNetwork = "fdgram"
 	default:
-		err = fmt.Errorf("invalid network: %s", network)
+		return nil, fmt.Errorf("invalid network: %s", network)
 	}
+
+	na, err := caddy.ParseNetworkAddress(caddy.JoinNetworkAddress(fdNetwork, strconv.Itoa(file), port))
 
 	if err != nil {
 		return nil, err
