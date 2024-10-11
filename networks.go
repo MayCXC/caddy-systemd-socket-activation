@@ -122,7 +122,6 @@ func getListener(ctx context.Context, network, addr string, cfg net.ListenConfig
 	}
 
 	na, err := caddy.ParseNetworkAddress(caddy.JoinNetworkAddress(fdNetwork, strconv.Itoa(file), port))
-
 	if err != nil {
 		return nil, err
 	}
