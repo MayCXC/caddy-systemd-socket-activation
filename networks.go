@@ -89,11 +89,6 @@ func sdListenFds() (map[string][]int, error) {
 }
 
 func getListener(ctx context.Context, network, addr string, cfg net.ListenConfig) (any, error) {
-	sdLnFds, err := sdListenFds()
-	if err != nil {
-		return nil, err
-	}
-
 	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
 		return nil, err
@@ -106,6 +101,11 @@ func getListener(ctx context.Context, network, addr string, cfg net.ListenConfig
 	}
 
 	i, err := strconv.ParseUint(index, 0, strconv.IntSize)
+	if err != nil {
+		return nil, err
+	}
+
+	sdLnFds, err := sdListenFds()
 	if err != nil {
 		return nil, err
 	}
