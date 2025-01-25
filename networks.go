@@ -101,7 +101,7 @@ func getListener(ctx context.Context, network, host, portRange string, portOffse
 		if err != nil {
 			return nil, err
 		}
-		index = uint(i)
+		index += uint(i)
 	}
 
 	files, ok := sdLnFds[name]
