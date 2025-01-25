@@ -88,26 +88,20 @@ func sdListenFds() (map[string][]int, error) {
 	return nameToFiles, nil
 }
 
-func getListener(ctx context.Context, network, addr string, cfg net.ListenConfig) (any, error) {
+func getListener(ctx context.Context, network, host, portRange string, portOffset uint, cfg net.ListenConfig) (any, error) {
 	sdLnFds, err := sdListenFds()
 	if err != nil {
 		return nil, err
 	}
 
-	host, port, err := net.SplitHostPort(addr)
-	if err != nil {
-		return nil, err
-	}
-
-	name, index, li := host, "0", strings.LastIndex(host, "/")
+	name, index, li := host, portOffset, strings.LastIndex(host, "/")
 	if li >= 0 {
 		name = host[:li]
-		index = host[li+1:]
-	}
-
-	i, err := strconv.ParseUint(index, 0, strconv.IntSize)
-	if err != nil {
-		return nil, err
+		i, err := strconv.ParseUint(host[li+1:], 0, strconv.IntSize)
+		if err != nil {
+			return nil, err
+		}
+		index = uint(i)
 	}
 
 	files, ok := sdLnFds[name]
@@ -115,10 +109,10 @@ func getListener(ctx context.Context, network, addr string, cfg net.ListenConfig
 		return nil, fmt.Errorf("invalid listen fd name: %s", name)
 	}
 
-	if uint64(len(files)) <= i {
-		return nil, fmt.Errorf("invalid listen fd index: %d", i)
+	if uint(len(files)) <= index {
+		return nil, fmt.Errorf("invalid listen fd index: %d", index)
 	}
-	file := files[i]
+	file := files[index]
 
 	var fdNetwork string
 	switch network {
@@ -130,10 +124,10 @@ func getListener(ctx context.Context, network, addr string, cfg net.ListenConfig
 		return nil, fmt.Errorf("invalid network: %s", network)
 	}
 
-	na, err := caddy.ParseNetworkAddress(caddy.JoinNetworkAddress(fdNetwork, strconv.Itoa(file), port))
+	na, err := caddy.ParseNetworkAddress(caddy.JoinNetworkAddress(fdNetwork, strconv.Itoa(file), portRange))
 	if err != nil {
 		return nil, err
 	}
 
-	return na.Listen(ctx, 0, cfg)
+	return na.Listen(ctx, portOffset, cfg)
 }

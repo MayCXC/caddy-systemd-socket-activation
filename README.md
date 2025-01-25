@@ -21,7 +21,7 @@ https://localhost {
 	bind sd/caddy.socket/1 {
 		protocols h1 h2
 	}
-	bind sdgram/CaddyDatagram/0 {
+	bind sdgram/CaddyDatagram {
 		protocols h3
 	}
 	log
